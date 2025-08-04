@@ -1,0 +1,4 @@
+card_category,prefer_consumption_category_1,prefer_consumption_category_2,specific_merchant,price_category
+Store Credit Card,all,all,Y,all
+Cash Back Card,Grocery Stores/Supermarkets,Jewelry Stores,N,low
+Premium Credit Card,Airlines,Jewelry Stores,N,high

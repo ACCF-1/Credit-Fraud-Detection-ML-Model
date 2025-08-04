@@ -1,0 +1,8 @@
+bin,column
+bin_2,
+bin_3,
+bin_5,customer_id_ma_amount_1d
+bin_5,customer_id_ma_amount_5d
+bin_5,customer_id_ma_amount_12d
+bin_5,customer_id_ma_amount_28d
+bin_5,customer_id_ma_amount_60d

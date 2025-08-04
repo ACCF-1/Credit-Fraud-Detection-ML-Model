@@ -1,2 +1,1 @@
-# Credit-Fraud-Detection-ML-Model
-Credit Fraud Detection ML Model
+# imbalance-classification-ML

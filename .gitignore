@@ -1,0 +1,18 @@
+# Ignore Python bytecode files
+*__pycache__/
+*.pyc
+
+# Ignore folders
+logs/
+research/
+
+# Ignore files
+*.reference_data.csv
+*.FRED code des.csv
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore virtual environments
+venv/
+env/

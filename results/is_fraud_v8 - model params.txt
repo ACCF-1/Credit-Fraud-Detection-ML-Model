@@ -1,0 +1,11 @@
+n_estimators: [50, 100]
+gpu_id: [0]
+tree_method: ['gpu_hist']
+predictor: ['gpu_predictor']
+max_depth: [1, 4, 7, 10]
+booster: ['gbtree']
+objective: ['binary:logistic']
+scale_pos_weight: [11, 13, 15]
+random_state: [42]
+Best params: {'imba__xgb__booster': 'gbtree', 'imba__xgb__gpu_id': 0, 'imba__xgb__max_depth': 4, 'imba__xgb__n_estimators': 100, 'imba__xgb__objective': 'binary:logistic', 'imba__xgb__predictor': 'gpu_predictor', 'imba__xgb__random_state': 42, 'imba__xgb__scale_pos_weight': 11, 'imba__xgb__tree_method': 'gpu_hist'}
+Best score: 0.913504449400967

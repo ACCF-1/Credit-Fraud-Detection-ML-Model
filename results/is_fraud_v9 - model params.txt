@@ -1,0 +1,4 @@
+strategy: ['stratified']
+random_state: [42]
+Best params: {'imba__bl__random_state': 42, 'imba__bl__strategy': 'stratified'}
+Best score: 0.011711802278209773

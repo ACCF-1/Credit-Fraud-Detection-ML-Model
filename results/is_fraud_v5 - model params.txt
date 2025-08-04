@@ -1,0 +1,8 @@
+n_estimators: range(50, 100, 50)
+max_depth: range(1, 3, 2)
+booster: ['gbtree']
+objective: ['binary:logistic']
+scale_pos_weight: [13]
+random_state: [42]
+Best params: {'imba__xgb__booster': 'gbtree', 'imba__xgb__max_depth': 1, 'imba__xgb__n_estimators': 50, 'imba__xgb__objective': 'binary:logistic', 'imba__xgb__random_state': 42, 'imba__xgb__scale_pos_weight': 13}
+Best score: 0.8286399160268421
