@@ -1,15 +1,4 @@
-'''IDA, verify data quality, cleansing, and univariate analysis'''
-'''TODO: outliner detection, imputation
-check potential categorical columns vs high cardinality columns
 
-check for nulls
-distribution, quartiles, mean of all numeric variables. Look at outliers too. This might also include histograms and box or violin plots.
-count of all categorical variables. Maybe a bar chart.
-mean and median of important numeric variables grouped by important categories. Maybe a bar chart.
-if time is a variable, look at numeric values over time.
-
-
-'''
 
 #In[0] Libraries
 '''import necessary libraries and setup parameters'''

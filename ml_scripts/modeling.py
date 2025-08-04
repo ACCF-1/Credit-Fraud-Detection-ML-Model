@@ -1,10 +1,4 @@
-"""ML model class"""
 
-'''
-to do
-add feat selector to panel data model
-CV method
-'''
 
 # In[0] Libraries
 '''Import necessary libraries'''

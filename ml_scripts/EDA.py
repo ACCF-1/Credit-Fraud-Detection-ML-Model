@@ -1,15 +1,3 @@
-'''IDA, verify data quality, cleansing, and univariate analysis
-#     data_schema:pd.DataFrame'''
-
-
-'''
-EDA graphs match with feat engineering
-
--need another EDA for dataset after feat engineering
-
-'''
-
-
 #In[0] Libraries & Setup
 '''Setup'''
 import pandas as pd

@@ -1,15 +1,3 @@
-'''fraud_transaction_generator'''
-
-'''to do
-add fraud - fake merchant logic
-credit card class, pos class
-['amount']<1
-
-roadmap:
-unittest
-add doc string
-optimize iterrows too slow
-'''
 
 # In[0] setup
 '''Setup libraries and params'''
