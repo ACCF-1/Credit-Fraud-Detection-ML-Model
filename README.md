@@ -87,7 +87,5 @@ See `requirements.txt` for a full list. Key packages include:
 
 This project is licensed under the MIT License.
 
-## Acknowledgements
-
 ---
 For questions or contributions, please contact Andy via andyinter1@gmail.com.
