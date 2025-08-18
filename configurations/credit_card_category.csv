@@ -1,4 +1,3 @@
-card_category,prefer_consumption_category_1,prefer_consumption_category_2,specific_merchant,price_category
-Store Credit Card,all,all,Y,all
-Cash Back Card,Grocery Stores/Supermarkets,Jewelry Stores,N,low
-Premium Credit Card,Airlines,Jewelry Stores,N,high
+version https://git-lfs.github.com/spec/v1
+oid sha256:01296448e24cf88e4cf9e9221efd3e8c8749bb2e53f831b984373c08d35a4c10
+size 254

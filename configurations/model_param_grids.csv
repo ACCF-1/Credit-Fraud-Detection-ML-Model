@@ -1,34 +1,3 @@
-model_name,parameter,values,value_type,special_type
-bl,strategy,stratified,list,str
-lr,penalty,l1|l2|elasticnet|none,list,str
-lr,C,-4|4|20,logspace,
-lr,solver,lbfgs|newton-cg|liblinear|sag|saga,list,str
-lr,max_iter,100|1000|2500,list,int
-dt,criterion,gini|entropy,list,str
-dt,splitter,best|random,list,str
-dt,max_depth,2|4|6|8|10|20|30,list,int
-dt,min_samples_split,2|4|6|8|10|20|30,list,int
-dt,min_samples_leaf,2|4|6|8|10|20|30,list,int
-dt,ccp_alpha,0,string,float
-knn,n_neighbors,1|11|1,range,
-knn,weights,uniform|distance,list,str
-knn,metric,euclidean|manhattan,list,str
-svm,C,0.1|1|10|100|1000,list,float
-svm,gamma,1|0.1|0.01|0.001|0.0001,list,float
-svm,kernel,rbf,list,str
-rf,n_estimators,0|30|5,range,
-rf,max_features,auto|sqrt,list,str
-rf,max_depth,1|11|2,range,
-rf,min_samples_split,2|4|6|8|10|20|30,list,int
-rf,min_samples_leaf,2|4|6|8|10|20|30,list,int
-rf,bootstrap,True|False,list,bool
-xgb,n_estimators,50|150|50,range,
-xgb,gpu_id,0,list,int
-xgb,tree_method,gpu_hist,list,str
-xgb,predictor,gpu_predictor,list,str
-xgb,max_depth,1|11|3,range,
-xgb,booster,gbtree,list,str
-xgb,objective,binary:logistic,list,str
-xgb,scale_pos_weight,11|13|15,list,int
-ada,n_estimators,10|50|100|500,list,int
-ada,learning_rate,0.0001|0.001|0.01|0.1|1.0,list,float
+version https://git-lfs.github.com/spec/v1
+oid sha256:1c473bc3eebbab1e6306b235c4a83b50dddcba374d69ff3a188c21de5b76ac6f
+size 1253

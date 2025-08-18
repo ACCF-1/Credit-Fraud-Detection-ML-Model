@@ -1,8 +1,3 @@
-bin,column
-bin_2,
-bin_3,
-bin_5,customer_id_ma_amount_1d
-bin_5,customer_id_ma_amount_5d
-bin_5,customer_id_ma_amount_12d
-bin_5,customer_id_ma_amount_28d
-bin_5,customer_id_ma_amount_60d
+version https://git-lfs.github.com/spec/v1
+oid sha256:e7d7ee34ef4f8a4c07929f89c4110da9eaf8ec7365818504b38b10c5cd9f826b
+size 183

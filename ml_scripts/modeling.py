@@ -1,4 +1,4 @@
-
+"""ML model class"""
 
 # In[0] Libraries
 '''Import necessary libraries'''
@@ -573,7 +573,7 @@ class ML_Model():
             scoring=f_scorer,
             return_train_score=True,
             cv=cv,
-            n_jobs=-1,
+            n_jobs=1, # Must be 1 for GPU mode
             verbose=1
         )
 

@@ -9,6 +9,7 @@ import requests
 from joblib import Parallel, delayed
 from sklearn.preprocessing import LabelEncoder
 import pytz
+import os
 
 
 # In[1] IP behaviour feature transform: get_ip_country_code & timezone
@@ -137,7 +138,7 @@ def add_ip_used_by_many(
 
     # Flag IPs used by multiple customer IDs (count > 1)
     for threshold in id_count_threshold:
-        df[f'IP_used_by_{threshold}_customer_id_or_more'] = df['IP_address'].map(lambda ip: ip_customer_counts[ip] >= threshold, na_action='ignore').astype('Int64')
+        df[f'IP_used_by_{threshold}_customer_id_or_more'] = df['IP_address'].map(lambda ip: ip_customer_counts[ip] >= threshold, na_action='ignore').astype(bool).astype('Int64')
         df[f'IP_used_by_{threshold}_customer_id_or_more'] = df[f'IP_used_by_{threshold}_customer_id_or_more'].fillna(0).astype(int)
     return df
 
@@ -528,11 +529,44 @@ def combine_two_cols_with_null_check(
     
     return df
 
+# In[9] add merchant card flags
+
+def add_merchant_card_flags(cf_raw_df):
+    """
+    Adds merchant card related flag columns to the dataframe.
+    
+    Parameters:
+    cf_raw_df (pd.DataFrame): Input dataframe containing credit card transaction data
+    
+    Returns:
+    pd.DataFrame: Dataframe with added columns:
+        - is_merchant_card: 1 if store credit card, else 0
+        - is_merchant_mismatch: 1 if merchant_id matches store_card_merchant_id, else 0
+        - is_merchant_card_and_mismatch: 1 if both above conditions are true, else 0
+    """
+    cf_raw_df = cf_raw_df.copy()
+    
+    cf_raw_df['is_merchant_card'] = (cf_raw_df['type_of_credit_card_used'] == 'Store Credit Card').astype(int)
+    cf_raw_df['is_merchant_mismatch'] = (cf_raw_df['merchant_id'] == cf_raw_df['store_card_merchant_id']).astype(int)
+    cf_raw_df['is_merchant_card_and_mismatch'] = (
+        (cf_raw_df['is_merchant_card'] == 1) & 
+        (cf_raw_df['is_merchant_mismatch'] == 1)
+    ).astype(int)
+    
+    return cf_raw_df
+
 
 # In[0]
 %time
 if __name__ == '__main__':
-    cf_raw_df = pd.read_csv('C:/Users/ccfan/Documents/GitHub/Imbalance-Classification-ML/data/raw/credit_fraud_data.csv') #_cleaned
+    cf_raw_df = pd.read_csv(
+        os.path.join(
+            os.path.dirname(os.getcwd()),
+            'data',
+            'raw',
+            'credit_fraud_data.csv'
+        ),
+    ) #_cleaned
     tgt = 'is_fraud'
 
     cf_raw_df['transaction_date'] = pd.to_datetime(cf_raw_df['transaction_date'], dayfirst=True, errors='coerce')
@@ -558,9 +592,7 @@ if __name__ == '__main__':
     #cf_raw_df['encoded_IP_address'] = encode_cat_col(cf_raw_df['IP_address'])
 
     #cf_raw_df = combine_two_cols_with_null_check(cf_raw_df)
-    cf_raw_df['is_merchant_card'] = (cf_raw_df['type_of_credit_card_used']=='Store Credit Card').astype(int)
-    cf_raw_df['is_merchant_mismatch'] = (cf_raw_df['merchant_id']==cf_raw_df['store_card_merchant_id']).astype(int)
-    cf_raw_df['is_merchant_card_and_mismatch'] = ((cf_raw_df['is_merchant_card']==1) & (cf_raw_df['is_merchant_mismatch']==1)).astype(int)
+    cf_raw_df = add_merchant_card_flags(cf_raw_df)
 
     cf_raw_df = add_total_seconds_since_midnight(cf_raw_df, date_col='country_code_date')
     cf_raw_df = decompose_date_components(cf_raw_df, date_col='transaction_date')
@@ -575,7 +607,12 @@ if __name__ == '__main__':
     cf_raw_df = cf_raw_df.sort_values('transaction_date')
 
     cf_raw_df.to_csv(
-        'C:/Users/ccfan/Documents/GitHub/Imbalance-Classification-ML/data/processed/credit_fraud_data_transformed.csv',
+        os.path.join(
+            os.path.dirname(os.getcwd()),
+            'data',
+            'processed',
+            'credit_fraud_data_transformed.csv'
+        ),
         index=False
     )
 
