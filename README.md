@@ -62,8 +62,8 @@ Imbalanced classification is a common challenge in real-world datasets, especial
 
 ## Features
 
-- **Imbalanced Data Handling:** SMOTE, ADASYN, and other resampling techniques.
-- **Flexible Model Selection:** Supports Random Forest, XGBoost, Logistic Regression, SVM, and more.
+- **Imbalanced Data Handling:** algorithm level - cost adjustment in algo (optional to choose: data level - SMOTE, ADASYN, and other resampling techniques.)
+- **Flexible Model Selection:** Supports Random Forest, XGBoost, Logistic Regression, Decision Tree, and more.
 - **Feature Engineering:** Includes IP-based, temporal, and categorical feature transformations.
 - **Automated Tuning:** Grid search with cross-validation and custom scoring.
 - **Interpretability:** SHAP analysis, feature importance plots, and detailed reports.
