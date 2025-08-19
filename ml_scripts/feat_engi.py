@@ -1,4 +1,3 @@
-
 # In[0] setup
 import numpy as np
 import pandas as pd
@@ -15,6 +14,15 @@ import os
 # In[1] IP behaviour feature transform: get_ip_country_code & timezone
 
 def add_ip_country_code(df):
+    """
+    Adds a column with the country code for each IP address using the GeoLite2 database.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing an 'IP_address' column.
+
+    Returns:
+        pd.DataFrame: DataFrame with an added 'IP_address_country_code' column.
+    """
     ip_address = df['IP_address']
     # Path to the GeoLite2 database file
     GEOIP_DATABASE_PATH = 'GeoLite2-Country.mmdb'
@@ -40,6 +48,17 @@ def add_ip_country_date(
         date_col='transaction_date',
         country_code_col='IP_address_country_code',
     ):
+    """
+    Adds a timezone-aware datetime column based on the country code of the IP address.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with transaction date and country code columns.
+        date_col (str): Name of the transaction date column.
+        country_code_col (str): Name of the country code column.
+
+    Returns:
+        pd.DataFrame: DataFrame with an added 'country_code_date' column.
+    """
     df[date_col] = pd.to_datetime(df[date_col])
 
     # Localize the UK timestamp to UTC (or Europe/London if UK time is needed)
@@ -83,6 +102,16 @@ def add_total_seconds_since_midnight(
         df, 
         date_col='transaction_date',
 ):
+    """
+    Adds a column with the total seconds since midnight for a datetime column.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with an added column for seconds since midnight.
+    """
     # Apply the function to calculate seconds since midnight
     df[f'{date_col}_sec_since_midnight'] = df[date_col].apply(lambda x: -999 if pd.isna(x) else x.hour * 3600 + x.minute * 60 + x.second)
     return df
@@ -97,6 +126,19 @@ def add_distinct_ip_window(
         ip_col='IP_address',
         window=[1,5,12,28]
 ):
+    """
+    Adds columns counting distinct IP addresses used by each customer in rolling time windows.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with customer, IP, and datetime columns.
+        date_col (str): Name of the datetime column.
+        id_col (str): Name of the customer ID column.
+        ip_col (str): Name of the IP address column.
+        window (list): List of window sizes in days.
+
+    Returns:
+        pd.DataFrame: DataFrame with added columns for distinct IP counts.
+    """
     df[date_col] = pd.to_datetime(df[date_col])
     df = df.sort_values([id_col, date_col])
     
@@ -132,6 +174,16 @@ def add_ip_used_by_many(
         df,
         id_count_threshold:list=None,
 ):
+    """
+    Adds columns indicating if an IP address is used by many unique customer IDs.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with 'IP_address' and 'customer_id' columns.
+        id_count_threshold (list): List of thresholds for unique customer counts.
+
+    Returns:
+        pd.DataFrame: DataFrame with added binary columns for each threshold.
+    """
     id_count_threshold = [int(df.customer_id.nunique()*0.01)] if id_count_threshold is None else id_count_threshold
     # Count unique customer IDs per IP
     ip_customer_counts = df.groupby('IP_address')['customer_id'].nunique()
@@ -150,16 +202,17 @@ def add_time_since_last_ip_per_customer(
     fill_na_with_zero=True
 ): #FIXME
     """
-    Adds a column showing seconds since the same IP last appeared **for each customer**.
-    
-    Args:
-        df: Input DataFrame
-        customer_col: Column name for customer IDs (default: 'customer_id')
-        ip_col: Column name for IP addresses (default: 'IP_address')
-        timestamp_col: Column name for timestamps (default: 'timestamp')
-    
+    Adds a column showing seconds since the same IP last appeared for each customer.
+
+    Parameters:
+        df (pd.DataFrame): Input DataFrame.
+        customer_col (str): Column name for customer IDs.
+        ip_col (str): Column name for IP addresses.
+        timestamp_col (str): Column name for timestamps.
+        fill_na_with_zero (bool): Whether to fill NaN with zero.
+
     Returns:
-        DataFrame with new column 'seconds_since_last_ip'
+        pd.DataFrame: DataFrame with new column 'seconds_since_last_ip'.
     """
     df = df.copy()
     
@@ -195,6 +248,17 @@ def add_is_weekend(
         date_col='transaction_date', 
         output_col='is_weekend'
 ):
+    """
+    Adds a binary column indicating if the transaction date is a weekend.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        date_col (str): Name of the datetime column.
+        output_col (str): Name of the output column.
+
+    Returns:
+        pd.DataFrame: DataFrame with the weekend indicator column.
+    """
     transaction_date = pd.to_datetime(
         df[date_col].apply(lambda x: x.replace(tzinfo=None) if hasattr(x, 'tzinfo') else x),
         errors='coerce'
@@ -210,6 +274,17 @@ def add_is_each_weekday(
         date_col='transaction_date',
         local_or_IP_country='local'
 ):
+    """
+    Adds binary columns for each weekday indicating if the transaction occurred on that day.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        date_col (str): Name of the datetime column.
+        local_or_IP_country (str): Prefix for the output columns.
+
+    Returns:
+        pd.DataFrame: DataFrame with weekday indicator columns.
+    """
     transaction_date = pd.to_datetime(
         df[date_col].apply(lambda x: x.replace(tzinfo=None) if hasattr(x, 'tzinfo') else x),
         errors='coerce'
@@ -227,6 +302,17 @@ def add_is_UK_bank_holiday(
         country_code='GB',
         date_col='transaction_date'
 ):
+    """
+    Adds a binary column indicating if the transaction date is a UK bank holiday.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        country_code (str): Country code for holidays.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with the bank holiday indicator column.
+    """
     # Create a UK holidays object
     holidays_of_country = holidays.country_holidays(country_code)
 
@@ -239,6 +325,16 @@ def add_bank_holiday_by_country_code(
         df, 
         date_col='transaction_date'
 ):
+    """
+    Adds a column indicating if the transaction date is a bank holiday in the IP country.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with country code and datetime columns.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with the bank holiday indicator column.
+    """
     df[date_col] = pd.to_datetime(
         df[date_col].apply(lambda x: x.replace(tzinfo=None) if hasattr(x, 'tzinfo') else x),
         errors='coerce'
@@ -260,6 +356,16 @@ def add_bank_holiday_by_country_code(
     return df
 
 def decompose_date_components(df, date_col='transaction_date'):
+    """
+    Decomposes a datetime column into day and month components.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with day and month columns.
+    """
     df['transaction_date_day'] = df[date_col].dt.day
     df['transaction_date_month'] = df[date_col].dt.month
     #df['transaction_date_year'] = df[date_col].dt.year
@@ -276,6 +382,15 @@ def decompose_date_components(df, date_col='transaction_date'):
 # In[] IP behaviour feature transform: add_time_features
 
 def is_night(transaction_date):
+    """
+    Determines if the transaction occurred at night (hour <= 6).
+
+    Parameters:
+        transaction_date (pd.Series): Series of datetime values.
+
+    Returns:
+        pd.Series: Series of binary values (1 if night, 0 otherwise).
+    """
     # Get the hour of the transaction
     is_night = transaction_date.dt.hour <= 6
     # Binary value: 1 if hour less than 6, and 0 otherwise
@@ -284,6 +399,16 @@ def is_night(transaction_date):
     return is_night
 
 def add_recent_ip_time_ago_by_customer(df, date_col='transaction_date'):
+    """
+    Adds a column for seconds since the last transaction for each customer.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with customer and datetime columns.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with the new column.
+    """
     df['customer_id_sec_since_last_trade'] = df.groupby('customer_id')['transaction_date'].diff().dt.total_seconds()
     df['customer_id_sec_since_last_trade'] = df['customer_id_sec_since_last_trade'].fillna(0).astype(int)
     return df
@@ -295,6 +420,19 @@ def add_distinct_ip_window(
         ip_col='IP_address',
         window=[1,5,12,28,60]
 ):
+    """
+    Adds columns counting distinct IP addresses used by each customer in rolling time windows.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with customer, IP, and datetime columns.
+        date_col (str): Name of the datetime column.
+        id_col (str): Name of the customer ID column.
+        ip_col (str): Name of the IP address column.
+        window (list): List of window sizes in days.
+
+    Returns:
+        pd.DataFrame: DataFrame with added columns for distinct IP counts.
+    """
     df[date_col] = pd.to_datetime(df[date_col])
     df = df.sort_values([id_col, date_col])
     
@@ -330,6 +468,16 @@ def add_distinct_ip_window(
 # In[] seasonality feature transform: add_date_features
 
 def break_date_components(df, date_col='transaction_date'):
+    """
+    Breaks a datetime column into day and month columns.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with a datetime column.
+        date_col (str): Name of the datetime column.
+
+    Returns:
+        pd.DataFrame: DataFrame with day and month columns.
+    """
     df['transaction_date_day'], df['transaction_date_month'] = df[date_col].dt.day, df[date_col].dt.month
     return df
 
@@ -337,6 +485,16 @@ def break_date_components(df, date_col='transaction_date'):
 # In[] transaction related feature transform: add_days_of_established
 
 def add_days_of_established(df, date_col:str='merchant_established_date'):
+    """
+    Adds a column for the number of days since the merchant was established.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with merchant established date column.
+        date_col (str): Name of the established date column.
+
+    Returns:
+        pd.DataFrame: DataFrame with the new column.
+    """
     df['established_period_in_day'] = (datetime.today() - df[date_col]).dt.days
     return df
 
@@ -348,6 +506,20 @@ def add_ma_trade_info_by_id(
         window:list=[1,5,12,28,60],
         trade_info:list=['amount']
 ):
+    """
+    Adds moving average or count features for trade information by customer over rolling windows.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with transaction data.
+        date_col (str): Name of the datetime column.
+        amt_col (str): Name of the amount column.
+        id_col (str): Name of the customer ID column.
+        window (list): List of window sizes in days.
+        trade_info (list): List of trade info types ('amount', 'count').
+
+    Returns:
+        pd.DataFrame: DataFrame with moving average/count columns.
+    """
     '''Partial Windows'''
     for val in trade_info:
         if val not in ['amount', 'count']:
@@ -391,9 +563,15 @@ def add_ma_trade_info_by_id(
 # In[] Postcode feature transform: transform postcode to London or not
 
 def postcode_to_LN_or_not(dataset):
-    '''
-    Transformer that can be applied on whole or after split dataset
-    '''
+    """
+    Transforms postcode to a binary indicator for London or not.
+
+    Parameters:
+        dataset (pd.DataFrame): DataFrame with a 'postcode_latest' column.
+
+    Returns:
+        pd.DataFrame: DataFrame with 'in_london' column.
+    """
     newly_engi_feats = set()
     ref_col = 'postcode_latest'
     inner_lon = ['E','EC','N','NW','SE','SW','W','WC']
@@ -412,7 +590,7 @@ def postcode_to_LN_or_not(dataset):
 def onehot_encode_column(df, column_name, drop_first=False, prefix=None, dtype=int):
     """
     One-hot encode a specified column in a pandas DataFrame.
-    
+
     Parameters:
     - df: pandas DataFrame containing the column to encode
     - column_name: name of the column to one-hot encode
@@ -442,7 +620,7 @@ def onehot_encode_column(df, column_name, drop_first=False, prefix=None, dtype=i
 def label_encode_column(df, column_name, inplace=False):
     """
     Label encode a specified column in a pandas DataFrame.
-    
+
     Parameters:
     - df: pandas DataFrame containing the column to encode
     - column_name: name of the column to label encode
@@ -467,7 +645,7 @@ def label_encode_column(df, column_name, inplace=False):
 def bin_uk_nonuk_country_code(df, country_code_col='IP_address_country_code', output_col='is_UK'):
     """
     Bin the country codes into UK and non-UK categories.
-    
+
     Parameters:
     - df: pandas DataFrame
     - country_code_col: name of the column containing country codes
@@ -534,15 +712,15 @@ def combine_two_cols_with_null_check(
 def add_merchant_card_flags(cf_raw_df):
     """
     Adds merchant card related flag columns to the dataframe.
-    
+
     Parameters:
-    cf_raw_df (pd.DataFrame): Input dataframe containing credit card transaction data
-    
+        cf_raw_df (pd.DataFrame): Input dataframe containing credit card transaction data
+
     Returns:
-    pd.DataFrame: Dataframe with added columns:
-        - is_merchant_card: 1 if store credit card, else 0
-        - is_merchant_mismatch: 1 if merchant_id matches store_card_merchant_id, else 0
-        - is_merchant_card_and_mismatch: 1 if both above conditions are true, else 0
+        pd.DataFrame: Dataframe with added columns:
+            - is_merchant_card: 1 if store credit card, else 0
+            - is_merchant_mismatch: 1 if merchant_id matches store_card_merchant_id, else 0
+            - is_merchant_card_and_mismatch: 1 if both above conditions are true, else 0
     """
     cf_raw_df = cf_raw_df.copy()
     

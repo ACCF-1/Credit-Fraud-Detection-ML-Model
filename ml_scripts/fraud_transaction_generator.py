@@ -1,4 +1,3 @@
-
 # In[0] setup
 '''Setup libraries and params'''
 
@@ -18,6 +17,11 @@ import struct
 '''Classes'''
 
 class Utility():
+    """
+    Utility class for various helper functions related to data generation, IP address generation,
+    holiday adjustment, and time conversions for fraud transaction simulation.
+    """
+
     _24HRS_IN_SEC = 86400
     _ALL_COUNTRY_CODE = [
             'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR',
@@ -68,9 +72,26 @@ class Utility():
         ]
 
     def export_data_in_csv(self, data:pd.DataFrame, file_name:str):
+        """
+        Export a DataFrame to a CSV file in the data directory.
+
+        Args:
+            data (pd.DataFrame): DataFrame to export.
+            file_name (str): Name of the output CSV file (without extension).
+        """
         data.to_csv(os.path.join(self.data_path, f'{file_name}.csv'), index=False)
 
     def get_holiday_period(self, date_col:str, date_df:pd.DataFrame): #FIXME
+        """
+        Identify if dates in a DataFrame fall within predefined holiday periods.
+
+        Args:
+            date_col (str): Name of the date column.
+            date_df (pd.DataFrame): DataFrame containing the date column.
+
+        Returns:
+            list: List of binary indicators for holiday period.
+        """
         hoilday_period = list(
             date_df[date_col].apply(lambda x: 1 if (
                 (x.month == 11 and x.day >= 24) or  # Black Friday and late November
@@ -86,17 +107,20 @@ class Utility():
             country_code: str = 'random', 
             max_attempts: int = 10000,
             major_country: bool = False,
-            max_retries: int = 3  # New parameter for max country code retries
+            max_retries: int = 3
         ):
         """
         Generate a random IPv4 address from a specified or random country code.
-        
+
         Args:
-            nullable: If True, may return None randomly
-            country_code: 'random' or specific ISO country code
-            max_attempts: Max IP generation attempts per country
-            major_country: If True and country_code='random', uses only major countries
-            max_retries: Max times to try with different country codes if IP generation fails
+            nullable (bool): If True, may return None randomly.
+            country_code (str): 'random' or specific ISO country code.
+            max_attempts (int): Max IP generation attempts per country.
+            major_country (bool): If True and country_code='random', uses only major countries.
+            max_retries (int): Max times to try with different country codes if IP generation fails.
+
+        Returns:
+            str or None: Generated IPv4 address or None.
         """
         retry_count = 0
         
@@ -143,10 +167,30 @@ class Utility():
         raise ValueError("Max retries exceeded for country code regeneration")
     
     def convert_sec_to_date_format(self, time_in_sec:int, start_date:str):
+        """
+        Convert seconds since a start date to a pandas datetime.
+
+        Args:
+            time_in_sec (int): Seconds since start date.
+            start_date (str): Start date as string.
+
+        Returns:
+            pd.Timestamp: Corresponding datetime.
+        """
         date = pd.to_datetime(time_in_sec, unit='s', origin=start_date)
         return date
     
     def gen_transaction_time_sec_format(self, day_idx:int, daylight_center=False):
+        """
+        Generate a transaction time in seconds for a given day index.
+
+        Args:
+            day_idx (int): Day index.
+            daylight_center (bool): If True, center around midday.
+
+        Returns:
+            int or None: Transaction time in seconds.
+        """
         #14400 = 4 hours
         tran_time_in_sec = int(np.random.normal(self._24HRS_IN_SEC/2, 14400)) if daylight_center else int(np.random.uniform(0, self._24HRS_IN_SEC))
         if 0 < tran_time_in_sec < self._24HRS_IN_SEC:
@@ -164,15 +208,17 @@ class Utility():
             adj_likelihood=[0.65, 0.35]
     ):
         """
-        Adjusts dates in 'datetime' column if they fall within 30 days before/after a holiday period.
-        Such dates are replaced with a random date from the holiday period.
+        Adjusts dates in a DataFrame to fall within holiday periods with a certain likelihood.
 
         Args:
-        df (pd.DataFrame): DataFrame containing a 'datetime' column.
-        holiday_periods (list of tuples): List of (start_date, end_date) defining holiday periods.
+            df (pd.DataFrame): DataFrame with a datetime column.
+            datetime_col (str): Name of the datetime column.
+            holiday_periods (pd.DataFrame, optional): DataFrame of holiday periods.
+            start_date (str, optional): Start date for adjustment.
+            adj_likelihood (list): Likelihood weights for adjustment.
 
         Returns:
-        pd.DataFrame: DataFrame with adjusted dates.
+            tuple: (Adjusted DataFrame, mask of adjusted dates)
         """
         df = df.copy()  # Avoid modifying the original DataFrame
         if holiday_periods is None:
@@ -206,6 +252,17 @@ class Utility():
             datetime_col:str, 
             adj_likelihood:float=0.2
     ):
+        """
+        Adjusts a portion of non-weekend dates to the nearest weekend.
+
+        Args:
+            df (pd.DataFrame): DataFrame with a datetime column.
+            datetime_col (str): Name of the datetime column.
+            adj_likelihood (float): Probability of adjustment.
+
+        Returns:
+            pd.DataFrame: DataFrame with adjusted dates.
+        """
         df = df.copy()
         # Identify non-weekend records
         non_weekend_mask = ~df[datetime_col].dt.weekday.isin([5, 6])  # Weekdays (Mon-Fri)
@@ -224,12 +281,22 @@ class Utility():
 
 
 class Customer():
+    """
+    Customer class for simulating customer profiles, including income, location, IP addresses,
+    and credit card ownership.
+    """
     _NEXT_ID = 1
     _FULL_CUS_TBL = None
     UTIL = Utility()
     _CREDIT_CARD_CATEGORY = pd.read_csv(os.path.join(UTIL.config_path, 'credit_card_category.csv'))
 
     def __init__(self, random_state:int=None):
+        """
+        Initialize a Customer instance.
+
+        Args:
+            random_state (int, optional): Seed for reproducibility.
+        """
         if random_state != None:
             np.random.seed(random_state)
         self._customer_id = Customer._NEXT_ID
@@ -247,32 +314,71 @@ class Customer():
 
     @classmethod
     def get_customer_tbl(cls):
+        """
+        Get the full customer table.
+
+        Returns:
+            pd.DataFrame: Customer table.
+        """
         return cls._FULL_CUS_TBL
 
     @classmethod
     def get_credit_card_category(cls):
+        """
+        Get the credit card category table.
+
+        Returns:
+            pd.DataFrame: Credit card category table.
+        """
         return cls._CREDIT_CARD_CATEGORY
 
     @classmethod
     def reset_class_var(cls):
+        """
+        Reset class variables for customer ID and customer table.
+        """
         cls._NEXT_ID = 1
         cls._FULL_CUS_TBL = None
 
     @property
     def income(self):
+        """
+        Get the income level of the customer.
+
+        Returns:
+            str: Income level.
+        """
         return self._income
 
     @income.setter
     def income(self, val):
+        """
+        Set the income level and update related attributes.
+
+        Args:
+            val (str): New income level.
+        """
         print(f"Setting value to {val}")
         self._income = val
         self._set_income_related_attributes()
 
     @property
     def ip_table(self):
+        """
+        Get the IP address table for the customer.
+
+        Returns:
+            pd.DataFrame: IP address table.
+        """
         return self._ip_table
 
     def _gen_ip_info_tbl(self):
+        """
+        Generate a table of possible IP addresses for the customer.
+
+        Returns:
+            pd.DataFrame: IP address info table.
+        """
         data = []
         primary_ip = self.UTIL.gen_random_ipv4_from_country_code(country_code='GB')
         second_ip = self.UTIL.gen_random_ipv4_from_country_code(
@@ -305,12 +411,21 @@ class Customer():
         return ip_tbl
 
     def _gen_credit_card_owned(self):
+        """
+        Randomly select credit cards owned by the customer.
+
+        Returns:
+            list: List of credit card categories.
+        """
         credit_card_category = Customer.get_credit_card_category()['card_category'].values
         nb_credit_card_owned = random.randint(1, len(credit_card_category))
         credit_card_owned = random.sample(list(credit_card_category), nb_credit_card_owned)
         return credit_card_owned
 
     def _set_income_related_attributes(self):
+        """
+        Set attributes related to the customer's income level.
+        """
         if self._income == 'low':
             self._mean_trans_amt = np.random.uniform(2, 200)
             self._online_offline_ratio = [0.5, 0.5]
@@ -322,6 +437,12 @@ class Customer():
             self._online_offline_ratio = [0.75, 0.25]
 
     def gen_customer_tbl(self):
+        """
+        Generate a DataFrame representing the customer's profile.
+
+        Returns:
+            pd.DataFrame: Customer profile table.
+        """
         data = [[self._customer_id, 
                  self._location_x,
                  self._location_y,
@@ -348,6 +469,10 @@ class Customer():
     
 
 class Merchant():
+    """
+    Merchant class for simulating merchant profiles, including category, POS terminals,
+    and store card issuance.
+    """
     _NEXT_MERCHANT_ID = 1
     _NEXT_POS_ID = 1
     _FULL_MERCHANT_TBL = None
@@ -359,6 +484,14 @@ class Merchant():
             merchant_category_filename:str='merchant_category_codes',
             fake_or_not:bool=False     
     ):
+        """
+        Initialize a Merchant instance.
+
+        Args:
+            random_state (int, optional): Seed for reproducibility.
+            merchant_category_filename (str): Filename for merchant categories.
+            fake_or_not (bool): Whether the merchant is fake.
+        """
         if random_state != None:
             np.random.seed(random_state)
         self._merchant_id = Merchant._NEXT_MERCHANT_ID
@@ -374,27 +507,60 @@ class Merchant():
     
     @classmethod
     def get_merchant_tbl(cls):
+        """
+        Get the full merchant table.
+
+        Returns:
+            pd.DataFrame: Merchant table.
+        """
         return cls._FULL_MERCHANT_TBL
 
     @classmethod
     def reset_class_var(cls):
+        """
+        Reset class variables for merchant and POS IDs and merchant table.
+        """
         cls._NEXT_MERCHANT_ID = 1
         cls._NEXT_POS_ID = 1
         cls._FULL_MERCHANT_TBL = None
 
     @property
     def pos_tbl(self):
+        """
+        Get the POS terminal table for the merchant.
+
+        Returns:
+            pd.DataFrame: POS terminal table.
+        """
         return self._pos_tbl
 
     @property
     def mcc_tbl(self):
+        """
+        Get the merchant category code table.
+
+        Returns:
+            pd.DataFrame: MCC table.
+        """
         return self._mcc_tbl
 
     @property
     def merchant_id(self):
+        """
+        Get the merchant ID.
+
+        Returns:
+            int: Merchant ID.
+        """
         return self._merchant_id
 
     def _gen_store_card_issued_or_not(self):
+        """
+        Determine if the merchant issues a store card.
+
+        Returns:
+            str: 'Y' if issued, 'N' otherwise.
+        """
         if self.fake_or_not:
             return 'N'
         elif self._merchant_category_info[1]=='Grocery Stores/Supermarkets' and self._merchant_size=='large':
@@ -407,6 +573,12 @@ class Merchant():
         return is_store_card_issued
 
     def gen_merchant_tbl(self):
+        """
+        Generate a DataFrame representing the merchant's profile.
+
+        Returns:
+            pd.DataFrame: Merchant profile table.
+        """
         data = []
         is_store_card_issued = self._gen_store_card_issued_or_not()
         for pos_id in self._pos_tbl['pos_id']:
@@ -432,6 +604,12 @@ class Merchant():
         return mer_tbl
     
     def _gen_pos_terminal_tbl(self):
+        """
+        Generate a table of POS terminals for the merchant.
+
+        Returns:
+            pd.DataFrame: POS terminal table.
+        """
         if self.fake_or_not == True:
             nb_pos = 1
         elif self._merchant_size == 'large':
@@ -456,9 +634,12 @@ class Merchant():
         """
         Generate a random date between start_date and end_date.
 
-        :param start_date: datetime object representing the start date
-        :param end_date: datetime object representing the end date
-        :return: random datetime object
+        Args:
+            start_date (datetime): Start date.
+            end_date (datetime): End date.
+
+        Returns:
+            datetime: Random date.
         """
         time_between_dates = end_date - start_date
         days_between_dates = time_between_dates.days
@@ -467,10 +648,23 @@ class Merchant():
 
     @staticmethod
     def get_merchant_unique_id_tbl(target_col:str, merchant_tbl:pd.DataFrame):
+        """
+        Get a table of unique merchant IDs and a target column.
+
+        Args:
+            target_col (str): Target column name.
+            merchant_tbl (pd.DataFrame): Merchant table.
+
+        Returns:
+            pd.DataFrame: Table with unique merchant IDs and target column.
+        """
         return merchant_tbl[['merchant_id', target_col]].groupby(['merchant_id']).agg(lambda x: x.mode().iloc[0]) #drop duplicates?
 
 
-class Transaction(): #FIXME random state
+class Transaction():
+    """
+    Transaction class for simulating transactions, including fraud logic, time, and merchant/customer assignment.
+    """
     _24HRS_IN_SEC = 86400
     UTIL = Utility()
 
@@ -481,6 +675,15 @@ class Transaction(): #FIXME random state
         blacklist_ip:str='blacklist_IP', 
         fake_merchant_nb:int=0
     ):
+        """
+        Initialize a Transaction instance.
+
+        Args:
+            start_date (str): Start date for transactions.
+            time_period_in_day (int): Number of days to simulate.
+            blacklist_ip (str): Filename for blacklist IPs.
+            fake_merchant_nb (int): Number of fake merchants to add.
+        """
         self._unusual_merchant_id = []
         self._merchant_tbl = self.add_fake_merchant(fake_merchant_nb)
         self._customer_tbl = self._assign_merchant_id_to_store_credit_card(Customer.get_customer_tbl())
@@ -494,40 +697,91 @@ class Transaction(): #FIXME random state
 
     @property
     def customer_tbl(self) -> pd.DataFrame:
+        """
+        Get the customer table.
+
+        Returns:
+            pd.DataFrame: Customer table.
+        """
         return self._customer_tbl
     
     @property
     def merchant_tbl(self) -> pd.DataFrame:
+        """
+        Get the merchant table.
+
+        Returns:
+            pd.DataFrame: Merchant table.
+        """
         return self._merchant_tbl
 
     @property
     def blacklist_ip_tbl(self) -> pd.DataFrame:
+        """
+        Get the blacklist IP table.
+
+        Returns:
+            pd.DataFrame: Blacklist IP table.
+        """
         return self._blacklist_ip_tbl
 
     @property
     def time_period_in_day(self):
+        """
+        Get the time period in days.
+
+        Returns:
+            int: Time period in days.
+        """
         return self._time_period_in_day
 
     @time_period_in_day.setter
     def time_period_in_day(self, val:int):
+        """
+        Set the time period in days.
+
+        Args:
+            val (int): New time period in days.
+        """
         print(f"Setting time_period_in_day to {val}")
         self._time_period_in_day = val
 
     @property
     def start_date(self):
+        """
+        Get the start date.
+
+        Returns:
+            str: Start date.
+        """
         return self._start_date
 
     @start_date.setter
     def start_date(self, val:str):
+        """
+        Set the start date.
+
+        Args:
+            val (str): New start date.
+        """
         print(f"Setting start_date to {val}")
         self._start_date = val
 
     @property
     def credit_card_category(self) -> pd.DataFrame:
+        """
+        Get the credit card category table.
+
+        Returns:
+            pd.DataFrame: Credit card category table.
+        """
         return self._credit_card_category
 
     @classmethod
     def reset_class_var(cls):
+        """
+        Reset class variables for Transaction.
+        """
         cls._24HRS_IN_SEC = 86400
 
     def _gen_transaction_amt(
@@ -535,6 +789,16 @@ class Transaction(): #FIXME random state
             customer_id:int, 
             fraud_type:str=None
     ) -> float:
+        """
+        Generate a transaction amount for a customer, optionally for a fraud type.
+
+        Args:
+            customer_id (int): Customer ID.
+            fraud_type (str, optional): Type of fraud.
+
+        Returns:
+            float: Transaction amount.
+        """
         
         if fraud_type=='cnp_testing':
             return np.random.uniform(10, 30)
@@ -554,14 +818,41 @@ class Transaction(): #FIXME random state
         return amount
 
     def _gen_transaction_nb(self, customer_id:int):
+        """
+        Generate the number of transactions for a customer.
+
+        Args:
+            customer_id (int): Customer ID.
+
+        Returns:
+            int: Number of transactions.
+        """
         customer_profile = self.customer_tbl[self.customer_tbl['customer_id']==customer_id]
         nb_transaction = np.random.poisson(customer_profile['nb_transaction_per_day'].item())
         return nb_transaction
 
-    def _gen_merchant_traded(self): #TODO merchant category effect, not random
+    def _gen_merchant_traded(self):
+        """
+        Randomly select a merchant ID for a transaction.
+
+        Returns:
+            int: Merchant ID.
+        """
         return random.choice(self.merchant_tbl['merchant_id'].values)
 
     def _gen_pos_id_of_merchant_traded(self, customer_id:int, merchant_id:int, radius:int=60, fraud_type:str=None):
+        """
+        Generate POS IDs for a merchant traded by a customer.
+
+        Args:
+            customer_id (int): Customer ID.
+            merchant_id (int): Merchant ID.
+            radius (int): Distance threshold.
+            fraud_type (str, optional): Type of fraud.
+
+        Returns:
+            tuple: (nearby POS IDs, far away POS IDs)
+        """
         if fraud_type in ['cnp_testing', 'cnp_monetization']:
             return [None], [None]
 
@@ -580,10 +871,21 @@ class Transaction(): #FIXME random state
         return nearby_pos_id, far_away_pos_id
 
     def plot_location_graph(self): # TODO
+        """
+        Placeholder for plotting location graph.
+        """
         pass
 
     def _assign_merchant_id_to_store_credit_card(self, customer_tbl):
-        '''assign merchant id to store credit card randomly based on merchant id that issue store credit card'''
+        """
+        Assign merchant IDs to store credit cards for customers.
+
+        Args:
+            customer_tbl (pd.DataFrame): Customer table.
+
+        Returns:
+            pd.DataFrame: Updated customer table.
+        """
         mer_card_info = Merchant.get_merchant_unique_id_tbl(target_col='is_store_card_issued', merchant_tbl=self.merchant_tbl)
         # no need to assign fake merchant as they wont have store credit card
         merchant_id_which_issue_card = mer_card_info[mer_card_info['is_store_card_issued'] == 'Y'].index.tolist()
@@ -599,7 +901,18 @@ class Transaction(): #FIXME random state
 
         return customer_tbl
 
-    def _gen_credit_card_likely_used(self, customer_id, merchant_id, fraud_trade:bool=False): #FIXME
+    def _gen_credit_card_likely_used(self, customer_id, merchant_id, fraud_trade:bool=False):
+        """
+        Generate the likely credit card used for a transaction.
+
+        Args:
+            customer_id (int): Customer ID.
+            merchant_id (int): Merchant ID.
+            fraud_trade (bool): If True, simulate fraud card usage.
+
+        Returns:
+            str: Credit card category used.
+        """
         card_owned = self.customer_tbl[self.customer_tbl['customer_id']==customer_id]['credit_card_owned'].values[0]
         # if fraud_trade, use random card
         if fraud_trade == True:
@@ -626,6 +939,16 @@ class Transaction(): #FIXME random state
         return card_used
 
     def _gen_ip_address_used(self, customer_id, fraud_trade:bool=False):
+        """
+        Generate the IP address used for a transaction.
+
+        Args:
+            customer_id (int): Customer ID.
+            fraud_trade (bool): If True, simulate fraud IP usage.
+
+        Returns:
+            str: IP address.
+        """
         if fraud_trade == True:
             ip_address = self.UTIL.gen_random_ipv4_from_country_code()
             random_blacklisted_ip = random.choices(self.blacklist_ip_tbl.values)[0][0]
@@ -641,12 +964,26 @@ class Transaction(): #FIXME random state
     def _gen_daily_transactions_per_day(
         self, 
         customer_id:int, 
-        day_idx:int, # a bit explanation here
+        day_idx:int,
         fraud_trade:bool=False,
         nb_fraud_trades:int=None,
         fraud_type:str=None,
         specific_card_used=None
-    ): #FIXME
+    ):
+        """
+        Generate daily transactions for a customer.
+
+        Args:
+            customer_id (int): Customer ID.
+            day_idx (int): Day index.
+            fraud_trade (bool): If True, generate fraud transactions.
+            nb_fraud_trades (int, optional): Number of fraud trades.
+            fraud_type (str, optional): Type of fraud.
+            specific_card_used (str, optional): Specific card to use.
+
+        Returns:
+            pd.DataFrame: Daily transaction records.
+        """
         '''transaction generating logic'''
         if fraud_trade==True and fraud_type not in ['cnp_testing', 'cnp_monetization', 'cp_cloning']:
             raise ValueError("If fraud_trade is provided, fraud_type must be provided as well.")
@@ -731,6 +1068,16 @@ class Transaction(): #FIXME random state
         return transaction_df
 
     def gen_transaction_tbl_per_customer(self, customer_id:int, time_period_in_day:int):
+        """
+        Generate a transaction table for a customer over a time period.
+
+        Args:
+            customer_id (int): Customer ID.
+            time_period_in_day (int): Number of days.
+
+        Returns:
+            pd.DataFrame: Transaction table for the customer.
+        """
         daily_transaction_tbl = []
         for day_idx in range(time_period_in_day):
             daily_transaction_tbl.append(self._gen_daily_transactions_per_day(customer_id, day_idx))
@@ -749,6 +1096,22 @@ class Transaction(): #FIXME random state
         test_to_monetize_gap_in_days:int=30,
         consumption_season_adj:bool=False,
     ):
+        """
+        Generate the full transaction table, optionally including frauds.
+
+        Args:
+            with_frauds (bool): Whether to include fraud transactions.
+            nb_test_fraud_per_day (int): Number of test frauds per day.
+            cnp_compromised_customer_nb_per_day (int): CNP compromised customers per day.
+            cp_compromised_customer_nb_per_day (int): CP compromised customers per day.
+            nb_of_monetizating_per_day (int): Monetization frauds per day.
+            monetizating_days (int): Number of monetization days.
+            test_to_monetize_gap_in_days (int): Gap between test and monetize.
+            consumption_season_adj (bool): Adjust for seasonality.
+
+        Returns:
+            pd.DataFrame: Full transaction table.
+        """
         transaction_df = self.customer_tbl.groupby('customer_id').apply(
             lambda x: self.gen_transaction_tbl_per_customer(
                 x['customer_id'].item(), time_period_in_day=self.time_period_in_day
@@ -815,6 +1178,15 @@ class Transaction(): #FIXME random state
         return transaction_df
 
     def add_fake_merchant(self, nb_fake_merchant:int=1):
+        """
+        Add fake merchants to the merchant table.
+
+        Args:
+            nb_fake_merchant (int): Number of fake merchants to add.
+
+        Returns:
+            pd.DataFrame: Updated merchant table.
+        """
         for nb in range(nb_fake_merchant):
             unusual_merchant = Merchant(fake_or_not=True)
             self._unusual_merchant_id.append(unusual_merchant.merchant_id)
@@ -829,6 +1201,19 @@ class Transaction(): #FIXME random state
         consumption_season_adj:bool=False,
         holiday_fraud_prob:list=[0.65, 0.35]
     ):
+        """
+        Generate card-present fraud (cloning) transactions.
+
+        Args:
+            transaction_df (pd.DataFrame): Transaction DataFrame.
+            nb_fraud_trades (int): Number of fraud trades.
+            compromised_customer_nb_per_day (int): Compromised customers per day.
+            consumption_season_adj (bool): Adjust for seasonality.
+            holiday_fraud_prob (list): Probability weights for holiday fraud.
+
+        Returns:
+            tuple: (Monetization fraud records, monetization fraud table)
+        """
         cloning_frauds_records = self._gen_test_fraud_records(
             transaction_df, 
             nb_fraud_trades=nb_fraud_trades, 
@@ -849,6 +1234,12 @@ class Transaction(): #FIXME random state
         return monetization_frauds_records, monetization_fraud_tbl
 
     def gen_cnp_fraud_comprimsed_merchant(self, transaction_df:pd.DataFrame): #TODO
+        """
+        Placeholder for CNP fraud logic with compromised merchant.
+
+        Args:
+            transaction_df (pd.DataFrame): Transaction DataFrame.
+        """
         # fraud logic 2: Fake QR code
         # fake merchant id
         # select established date early records, replace with fake
@@ -864,6 +1255,21 @@ class Transaction(): #FIXME random state
             consumption_season_adj:bool=False,
             weekend_adj:bool=True
     ):
+        """
+        Generate monetization fraud records and table.
+
+        Args:
+            fraud_type (str): Type of fraud.
+            test_fraud_id_n_card_type_tbl (pd.DataFrame): Table of test fraud IDs and card types.
+            nb_of_monetizating_per_day (int): Monetization frauds per day.
+            monetizating_days (int): Number of monetization days.
+            test_to_monetize_gap_in_days (int): Gap between test and monetize.
+            consumption_season_adj (bool): Adjust for seasonality.
+            weekend_adj (bool): Adjust for weekends.
+
+        Returns:
+            tuple: (Monetization fraud records, monetization fraud table)
+        """
         test_fraud_id_n_card_type_tbl = test_fraud_id_n_card_type_tbl.copy()
         test_fraud_id_n_card_type_tbl['num of day - monetizating start'] = test_fraud_id_n_card_type_tbl['num of day - testing'] + test_to_monetize_gap_in_days
         test_fraud_id_n_card_type_tbl['num of day - monetizating end'] = test_fraud_id_n_card_type_tbl['num of day - monetizating start'] + monetizating_days
@@ -911,6 +1317,15 @@ class Transaction(): #FIXME random state
         return monetization_frauds_records, monetization_fraud_tbl_no_date_adj
 
     def _refresh_time_derived_col(self, df):
+        """
+        Refresh time-derived columns in the DataFrame.
+
+        Args:
+            df (pd.DataFrame): DataFrame with transaction dates.
+
+        Returns:
+            pd.DataFrame: DataFrame with refreshed columns.
+        """
         # refresh No._of_day, date in sec
         df['No._of_day'] = (df['transaction_date'] - pd.to_datetime(self._start_date, format='%Y-%m-%d')).dt.days + 1
         df['date_in_sec'] = df['transaction_date'].apply(lambda x: int((x - pd.Timestamp(self._start_date)).total_seconds()))
@@ -919,9 +1334,16 @@ class Transaction(): #FIXME random state
     def _gen_testing_fraud_id_n_card_tbl(
             self, 
             testing_frauds_records:pd.DataFrame,
-        ): # fraud logic 3: identity fraud
-        '''generate fraud records for testing phase'''
+        ):
+        """
+        Generate a table of testing fraud IDs and card types.
 
+        Args:
+            testing_frauds_records (pd.DataFrame): Testing fraud records.
+
+        Returns:
+            pd.DataFrame: Table of fraud IDs and card types.
+        """
         test_fraud_id_n_card_type_tbl = testing_frauds_records.groupby('No._of_day')
         test_fraud_id_n_card_type_tbl = pd.DataFrame(
             data = test_fraud_id_n_card_type_tbl.apply(
@@ -943,7 +1365,20 @@ class Transaction(): #FIXME random state
             compromised_customer_nb_per_day:int=1,
             fraud_type:str=None,
             holiday_fraud_prob:list=[0.8, 0.2]
-        ): 
+        ):
+        """
+        Generate test fraud records for a given fraud type.
+
+        Args:
+            transaction_df (pd.DataFrame): Transaction DataFrame.
+            nb_fraud_trades (int): Number of fraud trades.
+            compromised_customer_nb_per_day (int): Compromised customers per day.
+            fraud_type (str): Type of fraud.
+            holiday_fraud_prob (list): Probability weights for holiday fraud.
+
+        Returns:
+            pd.DataFrame: Test fraud records.
+        """
         if fraud_type not in ['cnp_testing', 'cp_cloning']:
             raise ValueError("Please provide a valid fraud type: 'cnp_testing', 'cp_cloning'")
         holiday_period = Transaction.UTIL.get_holiday_period('transaction_date', transaction_df) # increase prob of both test and compromise
@@ -978,6 +1413,18 @@ class Transaction(): #FIXME random state
 # In[2] function to generate dataset
 '''Function to generate dataset'''
 def gen_credit_fraud_dataset(n_customer:int, n_merchant:int, n_days:int, start_date:str):
+    """
+    Generate a synthetic credit fraud dataset.
+
+    Args:
+        n_customer (int): Number of customers.
+        n_merchant (int): Number of merchants.
+        n_days (int): Number of days to simulate.
+        start_date (str): Start date for simulation.
+
+    Returns:
+        pd.DataFrame: Generated transaction DataFrame.
+    """
     # generate customer profiles table
     for nb in range(n_customer):
         cus_cls = Customer(nb)
@@ -1007,6 +1454,17 @@ def main(
         dataset_name:str, 
         reset=False
 ):
+    """
+    Main function to generate and export a credit fraud dataset.
+
+    Args:
+        n_customer (int): Number of customers.
+        n_merchant (int): Number of merchants.
+        n_days (int): Number of days to simulate.
+        start_date (str): Start date for simulation.
+        dataset_name (str): Output dataset name.
+        reset (bool): Whether to reset class variables.
+    """
     util = Utility()
     transaction_df = gen_credit_fraud_dataset(n_customer, n_merchant, n_days, start_date)
     util.export_data_in_csv(transaction_df, dataset_name)

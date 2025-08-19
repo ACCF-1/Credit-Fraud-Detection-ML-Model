@@ -28,6 +28,16 @@ def convert_datatypes(
     df: pd.DataFrame,
     data_schema: pd.DataFrame
 ):
+    """
+    Convert the data types of columns in a DataFrame according to a provided schema.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame whose columns need to be converted.
+        data_schema (pd.DataFrame): A DataFrame containing column names and their target data types.
+
+    Returns:
+        pd.DataFrame: The DataFrame with converted data types.
+    """
     # Define mapping of schema data types to pandas types
     dtype_mapping = {
         "string": "string",
@@ -49,7 +59,16 @@ def convert_datatypes(
 # In[1] Univariate Analysis Functions
 
 def analyze_fraud_patterns(df: pd.DataFrame, tgt_col: str) -> pd.DataFrame:
-    """Analyze and display patterns in fraud transactions."""
+    """
+    Analyze and display patterns in fraud transactions.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+
+    Returns:
+        pd.DataFrame: DataFrame containing only fraud transactions.
+    """
     fraud_df = df[df[tgt_col] == 1]
     print("\n=== Fraud Transaction Patterns ===")
     print("Common characteristics of fraud transactions:")
@@ -57,7 +76,13 @@ def analyze_fraud_patterns(df: pd.DataFrame, tgt_col: str) -> pd.DataFrame:
     return fraud_df
 
 def plot_amount_analysis(df: pd.DataFrame, tgt_col: str):
-    """Plot transaction amount analysis."""
+    """
+    Plot transaction amount analysis.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Transaction Amount Analysis ===")
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
@@ -70,7 +95,14 @@ def plot_amount_analysis(df: pd.DataFrame, tgt_col: str):
     plt.show()
 
 def plot_filtered_amount_analysis(df: pd.DataFrame, tgt_col: str, threshold: float = 2000):
-    """Plot transaction amount analysis for amounts below threshold."""
+    """
+    Plot transaction amount analysis for amounts below a specified threshold.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+        threshold (float): The amount threshold for filtering transactions.
+    """
     filtered_df = df[df['amount'] < threshold]
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
@@ -83,13 +115,27 @@ def plot_filtered_amount_analysis(df: pd.DataFrame, tgt_col: str, threshold: flo
     plt.show()
 
 def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Add time-based features to dataframe."""
+    """
+    Add time-based features to the DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+
+    Returns:
+        pd.DataFrame: DataFrame with additional time-based features.
+    """
     df['transaction_date'] = pd.to_datetime(df['transaction_date'])
     df['transaction_hour'] = df['transaction_date'].dt.hour
     return df
 
 def plot_time_analysis(df: pd.DataFrame, tgt_col: str):
-    """Plot transaction time analysis."""
+    """
+    Plot transaction time analysis.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Transaction Time Analysis ===")
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
@@ -102,7 +148,14 @@ def plot_time_analysis(df: pd.DataFrame, tgt_col: str):
     plt.show()
 
 def percentage_plot(ax, data, col):
-    """Helper function to create percentage plots."""
+    """
+    Helper function to create percentage plots for a categorical column.
+
+    Parameters:
+        ax (matplotlib.axes.Axes): The axes to plot on.
+        data (pd.DataFrame): The DataFrame containing data.
+        col (str): The column to plot.
+    """
     total = len(data)
     counts = data[col].value_counts()
     percentages = (counts / total * 100).sort_values(ascending=True)
@@ -120,7 +173,13 @@ def percentage_plot(ax, data, col):
     ax.set_xlim(0, percentages.max() * 1.15)
 
 def analyze_merchants(df: pd.DataFrame, tgt_col: str):
-    """Analyze merchant-related patterns."""
+    """
+    Analyze merchant-related patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Merchant Analysis ===")
     top_merchants = df['merchant_id'].value_counts().head(20)
     display(top_merchants.to_frame('Transaction Count'))
@@ -134,7 +193,13 @@ def analyze_merchants(df: pd.DataFrame, tgt_col: str):
     display(fraud_by_merchant.head(10).to_frame('Fraud Rate'))
 
 def analyze_customers(df: pd.DataFrame, tgt_col: str):
-    """Analyze customer-related patterns."""
+    """
+    Analyze customer-related patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Customer Analysis ===")
     customer_transactions = df['customer_id'].value_counts()
     display(customer_transactions.describe().to_frame('Transaction Count Stats'))
@@ -144,7 +209,13 @@ def analyze_customers(df: pd.DataFrame, tgt_col: str):
     display(fraud_customers.to_frame('Fraud Transactions'))
 
 def analyze_mccs(df: pd.DataFrame, tgt_col: str):
-    """Analyze merchant category codes."""
+    """
+    Analyze merchant category codes (MCCs).
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== MCCs Analysis ===")
     mcc_counts = df['MCCs'].value_counts()
     display(mcc_counts.to_frame('Transaction Count'))
@@ -158,7 +229,13 @@ def analyze_mccs(df: pd.DataFrame, tgt_col: str):
     display(fraud_by_mcc.to_frame('Fraud Rate'))
 
 def analyze_ip_addresses(df: pd.DataFrame, tgt_col: str):
-    """Analyze IP address patterns."""
+    """
+    Analyze IP address patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== IP Address Analysis ===")
     df['ip_first_octet'] = df['IP_address'].str.split('.').str[0]
 
@@ -171,7 +248,13 @@ def analyze_ip_addresses(df: pd.DataFrame, tgt_col: str):
     display(fraud_by_ip.head(20).to_frame('Fraud Rate'))
 
 def plot_univariate_analysis(df: pd.DataFrame, col: str):
-    """Plot univariate analysis for a single column."""
+    """
+    Plot univariate analysis for a single column.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        col (str): The column to analyze.
+    """
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
     sns.boxplot(y=col, data=df)
@@ -186,7 +269,14 @@ def plot_univariate_analysis(df: pd.DataFrame, col: str):
 # In[2] Multivariate Analysis Functions
 
 def plot_categorical_analysis(df: pd.DataFrame, tgt_col: str, categorical_cols: list):
-    """Plot analysis of categorical variables."""
+    """
+    Plot analysis of categorical variables.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+        categorical_cols (list): List of categorical columns to analyze.
+    """
     print("\n=== Categorical Variables Analysis ===")
     for col in categorical_cols:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
@@ -203,13 +293,24 @@ def plot_categorical_analysis(df: pd.DataFrame, tgt_col: str, categorical_cols: 
         plt.show()
 
 def analyze_card_presence(df: pd.DataFrame, tgt_col: str):
-    """Analyze card presence patterns."""
+    """
+    Analyze card presence patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Card Present Analysis ===")
     card_present_fraud = pd.crosstab(df['card_present_or_not'], df[tgt_col], normalize='index') * 100
     display(card_present_fraud)
 
 def analyze_correlations(df: pd.DataFrame):
-    """Analyze numerical correlations."""
+    """
+    Analyze numerical correlations in the DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+    """
     print("\n=== Correlation Analysis ===")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     corr_matrix = df[numerical_cols].corr()
@@ -220,7 +321,12 @@ def analyze_correlations(df: pd.DataFrame):
     plt.show()
 
 def analyze_customer_fraud_patterns(fraud_df: pd.DataFrame):
-    """Analyze customer fraud patterns."""
+    """
+    Analyze customer fraud patterns.
+
+    Parameters:
+        fraud_df (pd.DataFrame): DataFrame containing only fraud transactions.
+    """
     customer_fraud_patterns = fraud_df.groupby('customer_id').agg({
         'transaction_date': ['count', lambda x: (x.max() - x.min()).total_seconds()/3600],
         'amount': ['mean', 'sum']
@@ -229,7 +335,13 @@ def analyze_customer_fraud_patterns(fraud_df: pd.DataFrame):
     display(customer_fraud_patterns.sort_values('transaction_count', ascending=False).head(10))
 
 def analyze_store_card_merchants(df: pd.DataFrame, tgt_col: str):
-    """Analyze store card merchant patterns."""
+    """
+    Analyze store card merchant patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     print("\n=== Store Card Merchant Analysis ===")
     store_card_analysis = df.groupby('store_card_merchant_id').agg({
         tgt_col: 'mean',
@@ -238,7 +350,13 @@ def analyze_store_card_merchants(df: pd.DataFrame, tgt_col: str):
     display(store_card_analysis.head(10))
 
 def analyze_merchant_age(df: pd.DataFrame, tgt_col: str):
-    """Analyze fraud patterns by merchant age."""
+    """
+    Analyze fraud patterns by merchant age.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     df['merchant_age'] = (pd.to_datetime(df['transaction_date']) - 
                           pd.to_datetime(df['merchant_established_date'])).dt.days / 365
     
@@ -253,7 +371,13 @@ def analyze_merchant_age(df: pd.DataFrame, tgt_col: str):
     plt.show()
 
 def analyze_customer_behavior(df: pd.DataFrame, tgt_col: str):
-    """Analyze customer transaction behavior."""
+    """
+    Analyze customer transaction behavior.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     customer_stats = df.groupby('customer_id').agg({
         'amount': ['mean', 'std', 'count'],
         tgt_col: 'sum'
@@ -261,7 +385,13 @@ def analyze_customer_behavior(df: pd.DataFrame, tgt_col: str):
     display(customer_stats.head(10))
 
 def analyze_geographic_patterns(df: pd.DataFrame, tgt_col: str):
-    """Analyze fraud by geographic regions (using IP)."""
+    """
+    Analyze fraud by geographic regions (using IP).
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     df['ip_country'] = df['IP_address'].str.split('.').str[0]  # Simplified example
     
     plt.figure(figsize=(12,6))
@@ -274,7 +404,13 @@ def analyze_geographic_patterns(df: pd.DataFrame, tgt_col: str):
 # In[3] Temporal analysis
 
 def plot_daily_transactions(df: pd.DataFrame, tgt_col: str):
-    """Plot daily transaction patterns."""
+    """
+    Plot daily transaction patterns.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     df['transaction_day'] = df['transaction_date'].dt.day
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
@@ -287,7 +423,13 @@ def plot_daily_transactions(df: pd.DataFrame, tgt_col: str):
     plt.show()
 
 def plot_transaction_trends(df: pd.DataFrame, tgt_col: str):
-    """Plot transaction trends over time."""
+    """
+    Plot transaction trends over time.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+    """
     df['date'] = df['transaction_date'].dt.date
     daily_counts = df.groupby('date').size()
     daily_fraud = df[df[tgt_col]==1].groupby('date').size()
@@ -302,7 +444,14 @@ def plot_transaction_trends(df: pd.DataFrame, tgt_col: str):
     plt.show()
 
 def analyze_transaction_clustering(df: pd.DataFrame, tgt_col: str, time_window_minutes=30):
-    """Analyze rapid transactions (potential fraud clusters)."""
+    """
+    Analyze rapid transactions (potential fraud clusters).
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data.
+        tgt_col (str): The target column indicating fraud.
+        time_window_minutes (int): The time window in minutes to consider transactions as rapid.
+    """
     df = df.sort_values('transaction_date')
     df['time_diff'] = df.groupby('customer_id')['transaction_date'].diff().dt.total_seconds() / 60
     df['is_rapid'] = df['time_diff'] <= time_window_minutes
@@ -467,6 +616,7 @@ def perform_eda(df: pd.DataFrame, tgt_col: str, categorical_cols: list = None):
     Parameters:
         df (pd.DataFrame): The DataFrame containing credit card transaction data.
         tgt_col (str): The target column indicating fraud.
+        categorical_cols (list, optional): List of categorical columns to analyze.
     """
     input_df = df.copy()
 

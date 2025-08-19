@@ -1,5 +1,3 @@
-
-
 #In[0] Libraries
 '''import necessary libraries and setup parameters'''
 import pandas as pd
@@ -41,6 +39,16 @@ def convert_datatypes(
     df: pd.DataFrame,
     data_schema: pd.DataFrame
 ):
+    """
+    Convert the data types of columns in a DataFrame according to a provided schema.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame whose columns need to be converted.
+        data_schema (pd.DataFrame): A DataFrame containing column names and their target data types.
+
+    Returns:
+        pd.DataFrame: The DataFrame with converted data types.
+    """
     # Define mapping of schema data types to pandas types
     dtype_mapping = {
         "string": "string",
@@ -63,10 +71,13 @@ def check_if_nulls_in_non_nullable_cols(
     df:pd.DataFrame, 
     data_schema:pd.DataFrame
 ):
-    """ Check for null values in non-nullable columns of the DataFrame.
+    """
+    Check for null values in non-nullable columns of the DataFrame.
+
     Args:  
         df (pd.DataFrame): The DataFrame to check.
         data_schema (pd.DataFrame): The schema DataFrame containing column nullability information.
+
     Returns:
         None: Prints the status of non-nullable columns.
     """
@@ -89,10 +100,13 @@ def check_missing_columns(
         df: pd.DataFrame, 
         data_schema: pd.DataFrame
 ) -> bool:
-    """ Check if the DataFrame has all required columns as per the schema.
+    """
+    Check if the DataFrame has all required columns as per the schema.
+
     Args:  
         df (pd.DataFrame): The DataFrame to check.
         data_schema (pd.DataFrame): The schema DataFrame containing required columns.     
+
     Returns:
         bool: True if all required columns are present, False otherwise.
     """
@@ -111,10 +125,13 @@ def check_non_nullable_violation(
     df: pd.DataFrame, 
     data_schema: pd.DataFrame
 ) -> bool:
-    """ Check for null values in non-nullable columns of the DataFrame.
+    """
+    Check for null values in non-nullable columns of the DataFrame.
+
     Args:  
         df (pd.DataFrame): The DataFrame to check.
         data_schema (pd.DataFrame): The schema DataFrame containing column nullability information.
+
     Returns:
         bool: True if no nulls are found in non-nullable columns, False otherwise.
     """
@@ -133,10 +150,13 @@ def check_data_types(
     df: pd.DataFrame,   
     data_schema: pd.DataFrame
 ) -> bool:
-    """ Check if the DataFrame columns match the expected data types from the schema.   
+    """
+    Check if the DataFrame columns match the expected data types from the schema.
+
     Args:
         df (pd.DataFrame): The DataFrame to check.
         data_schema (pd.DataFrame): The schema DataFrame containing expected data types.    
+
     Returns:
         bool: True if all columns have the expected data types, False otherwise.
     """
@@ -164,10 +184,13 @@ def check_non_negative_violations(
     df: pd.DataFrame,
     data_schema: pd.DataFrame   
 ) -> bool:
-    """ Check for negative values in non-negative columns of the DataFrame.
+    """
+    Check for negative values in non-negative columns of the DataFrame.
+
     Args:
         df (pd.DataFrame): The DataFrame to check.
         data_schema (pd.DataFrame): The schema DataFrame containing column non-negativity information.
+
     Returns:
         bool: True if no negative values are found in non-negative columns, False otherwise.
     """

@@ -186,6 +186,9 @@ class ML_Model():
     # Private helper methods ===================================================
 
     def _update_class_weight(self):
+        """
+        Update the class weight attribute based on the training target values.
+        """
         if self._train_tgt_y is not None:
             value_counts = self._train_tgt_y.value_counts()
             if len(value_counts) > 0:
@@ -196,33 +199,76 @@ class ML_Model():
             self._class_weight = None
 
     def _validate_phase(self, phase: str):
-        """Validate that the modeling phase is either 'deploy' or 'training'."""
+        """
+        Validate that the modeling phase is either 'deploy' or 'training'.
+
+        Args:
+            phase (str): The phase to validate.
+
+        Raises:
+            ValueError: If phase is not valid.
+        """
         if phase not in self.VALID_PHASES:
             raise ValueError(f'Phase must be one of {self.VALID_PHASES}')
     
     def _load_data(self) -> pd.DataFrame:
-        """Load and return the model data based on the current phase."""
+        """
+        Load and return the model data based on the current phase.
+
+        Returns:
+            pd.DataFrame: Loaded data.
+        """
         if not os.path.exists(self.input_file_path):
             raise FileNotFoundError(f"Data file not found at {self.input_file_path}")
         return pd.read_csv(self.input_file_path)
     
     def _extract_features(self) -> np.ndarray:
-        """Extract feature names from the data, excluding the target column."""
+        """
+        Extract feature names from the data, excluding the target column.
+
+        Returns:
+            np.ndarray: Array of feature names.
+        """
         return self._data_for_mdl.columns[~(self._data_for_mdl.columns == self._target)].values
     
     def _func_disabler(self, warn_msg: str):
-        """Raise an exception if called during deployment phase."""
+        """
+        Raise an exception if called during deployment phase.
+
+        Args:
+            warn_msg (str): Warning message to display.
+
+        Raises:
+            Exception: If called in deployment phase.
+        """
         if self.phase == 'deploy':
             raise Exception(warn_msg)
 
     def _initialize_model(self, model_name: str):
-        """Get an instance of the specified model with random seed."""
+        """
+        Get an instance of the specified model with random seed.
+
+        Args:
+            model_name (str): Short name of the model.
+
+        Returns:
+            Model instance.
+        """
         if model_name not in self.MODEL_MAPPING:
             raise ValueError(f"Invalid model name. Choose from: {list(self.MODEL_MAPPING.keys())}")
         return self.MODEL_MAPPING[model_name](random_state=self.seed)
     
-    def _get_param_grid(self, model_name:str, param_file_name:str='model_param_grids') -> Dict: #FIXME move to csv
-        """Return the parameter grid for the specified model."""
+    def _get_param_grid(self, model_name:str, param_file_name:str='model_param_grids') -> Dict:
+        """
+        Return the parameter grid for the specified model.
+
+        Args:
+            model_name (str): Short name of the model.
+            param_file_name (str): Name of the parameter grid file.
+
+        Returns:
+            Dict: Parameter grid.
+        """
         df = pd.read_csv(os.path.join(self._parent_dir, 'configurations', f'{param_file_name}.csv'))
         param_grids = {}
         
@@ -267,13 +313,27 @@ class ML_Model():
         return grid
     
     def _get_cv_strategy(self, model_name: str):
-        """Return appropriate cross-validation strategy."""
+        """
+        Return appropriate cross-validation strategy.
+
+        Args:
+            model_name (str): Short name of the model.
+
+        Returns:
+            Cross-validation strategy.
+        """
         if model_name == 'bl':
             return model_selection.KFold(n_splits=2, random_state=self.seed, shuffle=True)
         return model_selection.RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=self.seed)
     
     def _save_model(self, model, version: int = 1):
-        """Save the model to disk with versioning."""
+        """
+        Save the model to disk with versioning.
+
+        Args:
+            model: Model to save.
+            version (int): Version number.
+        """
         saves_dir = os.path.join(self._parent_dir, 'saves')
         os.makedirs(saves_dir, exist_ok=True)
         
@@ -282,7 +342,13 @@ class ML_Model():
             dill.dump(model, f)
     
     def _save_params_info(self, params: Dict, version: int = 1):
-        """Save model parameters and performance info to a text file."""
+        """
+        Save model parameters and performance info to a text file.
+
+        Args:
+            params (Dict): Model parameters.
+            version (int): Version number.
+        """
         results_dir = os.path.join(self._parent_dir, 'results')
         os.makedirs(results_dir, exist_ok=True)
         
@@ -295,7 +361,12 @@ class ML_Model():
             f.write(f'Best score: {self._trained_model.best_score_}\n')
     
     def _get_model_version_count(self) -> int:
-        """Count the number of saved model versions."""
+        """
+        Count the number of saved model versions.
+
+        Returns:
+            int: Number of model versions.
+        """
         saves_dir = os.path.join(self._parent_dir, 'saves')
         mdl_version_cnt = 1
         if os.path.exists(saves_dir):
@@ -312,7 +383,18 @@ class ML_Model():
             numerical_columns: list = ['auto_detect'],
             categorical_columns: list = ['auto_detect'],
     ):
-        """ Build a feature selector pipeline based on statistical methods."""
+        """
+        Build a feature selector pipeline based on statistical methods.
+
+        Args:
+            numerical_pipe_components (list): Components for numerical pipeline.
+            categorical_pipe_components (list): Components for categorical pipeline.
+            numerical_columns (list): Numerical columns to use.
+            categorical_columns (list): Categorical columns to use.
+
+        Returns:
+            ColumnTransformer: Feature selector pipeline.
+        """
         numerical_columns = lambda X: sf.get_cols_for_selector(X.columns, 'num') if numerical_columns == ['auto_detect'] else numerical_columns
         categorical_columns = lambda X: sf.get_cols_for_selector(X.columns, 'cat') if categorical_columns == ['auto_detect'] else categorical_columns
 
@@ -325,6 +407,15 @@ class ML_Model():
         return col_trans_pipe
 
     def _build_feature_selector_by_model(self, model_name:str='rf'):
+        """
+        Build a feature selector using a model.
+
+        Args:
+            model_name (str): Short name of the model.
+
+        Returns:
+            SelectFromModel: Feature selector.
+        """
         model = self.MODEL_MAPPING[model_name]()
         if model is None:
             raise ValueError(f"Invalid model name: {model_name}. Choose from {list(self.MODEL_MAPPING.keys())}")
@@ -337,9 +428,13 @@ class ML_Model():
             components:list,
             params:list=None,
     ):
-        """Build the data preprocessing pipeline. Return a pipeline with components.
+        """
+        Build the data preprocessing pipeline. Return a pipeline with components.
+
         Args:
             components: List of tuples specifying the pipeline steps
+            params: List of parameter tuples for pipeline components
+
         Returns:
             skl_pipe: A scikit-learn pipeline object
         """
@@ -360,12 +455,17 @@ class ML_Model():
         return preprocessor
 
     def _build_model_pipeline(self, model_name, model, resampling:tuple=None, *feature_selectors):
-        """Build the full model pipeline with feature selection and rebalancing.
-        
+        """
+        Build the full model pipeline with feature selection and rebalancing.
+
         Args:
             model_name: Name of the model
             model: The model instance
+            resampling: Resampling method (optional)
             *feature_selectors: Variable number of feature selector objects
+
+        Returns:
+            Pipeline: Model pipeline.
         """
         components = []
         
@@ -382,13 +482,25 @@ class ML_Model():
         return imb_pipe(components)
 
     def _convert_param_grid_for_pipeline(self, model_name, mdl_param_grid):
+        """
+        Convert parameter grid for use in a pipeline.
+
+        Args:
+            model_name (str): Short name of the model.
+            mdl_param_grid (dict): Model parameter grid.
+
+        Returns:
+            dict: Converted parameter grid.
+        """
         return {
             f'imba__{model_name}__{key}': value 
             for key, value in mdl_param_grid.items()
         }
     
-    def _get_model_params(self): #FIXME to review
-        """Display and store the best parameters and performance metrics."""
+    def _get_model_params(self):
+        """
+        Display and store the best parameters and performance metrics.
+        """
         self._func_disabler("No model params export under deployment phase")
         
         if self._trained_model is None:
@@ -421,10 +533,12 @@ class ML_Model():
     def _setup_pipeline_for_tuning(self, model_name: str):
         """
         Build full model pipeline and parameter grid for tuning.
-        
+
+        Args:
+            model_name (str): Short name of the model.
+
         Returns:
-            whole_pipeline: Full sklearn pipeline
-            pipe_param_grid: Converted param grid for GridSearchCV
+            tuple: (whole_pipeline, pipe_param_grid, mdl_param_grid)
         """
         model = self._initialize_model(model_name)
         mdl_param_grid = self._get_param_grid(model_name)
@@ -470,7 +584,9 @@ class ML_Model():
         return whole_pipeline, pipe_param_grid, mdl_param_grid
     
     def _generate_visualizations(self): #FIXME
-        """Generate model evaluation visualizations."""
+        """
+        Generate model evaluation visualizations.
+        """
         # Parameter combinations plot
         uf.param_combinations( 
             self._trained_model, 
@@ -524,13 +640,14 @@ class ML_Model():
         model_name: str, 
         cv_or_not: bool = True
     ):
-        print(f'Starting initial training for {model_name} model...')
-        """        
+        """
         Train the specified model on the training data.
 
         Args:
             model_name: Short name of the model to train
+            cv_or_not (bool): Whether to use cross-validation
         """
+        print(f'Starting initial training for {model_name} model...')
         self._func_disabler('No training under model deployment phase')
         
         if self._train_X is None:
@@ -555,6 +672,9 @@ class ML_Model():
     def model_training_with_tuning(self, model_name: str):
         """
         Perform hyperparameter tuning for the specified model.
+
+        Args:
+            model_name (str): Short name of the model.
         """
         self._func_disabler('No tuning under model deployment phase')
         print(f'Starting tuning for {model_name} model...')
@@ -751,7 +871,9 @@ class ML_Model():
         self._generate_visualizations()
 
     def feature_importance_analysis(self):
-        # Feature importance plots
+        """
+        Perform feature importance analysis and plot results.
+        """
         classifer = self._trained_model.best_estimator_[-1][-1]
         if hasattr(classifer, 'feature_importances_'):
             print("\nFeature importance analysis")
@@ -869,10 +991,20 @@ class ML_Model_Panel_Data(ML_Model):
     """
     
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the ML_Model_Panel_Data class.
+        """
         super().__init__(*args, **kwargs)
         print('Model for panel data')
 
     def split_data(self, split_ratio=ML_Model.DEFAULT_SPLIT_RATIO, random_state=None):
+        """
+        Split panel data into training and test sets.
+
+        Args:
+            split_ratio (float): Proportion of data to use for testing.
+            random_state (int, optional): Random seed for reproducibility.
+        """
         rs = random_state if random_state is not None else self.seed
         self._func_disabler('No data split under model deployment phase')
         print(f'Splitting data with ratio {split_ratio}...')
@@ -895,10 +1027,12 @@ class ML_Model_Panel_Data(ML_Model):
     def _setup_pipeline_for_tuning(self, model_name: str):
         """
         Build full model pipeline and parameter grid for tuning.
-        
+
+        Args:
+            model_name (str): Short name of the model.
+
         Returns:
-            whole_pipeline: Full sklearn pipeline
-            pipe_param_grid: Converted param grid for GridSearchCV
+            tuple: (whole_pipeline, pipe_param_grid, mdl_param_grid)
         """
         model = self._initialize_model(model_name)
         mdl_param_grid = self._get_param_grid(model_name)
@@ -940,6 +1074,12 @@ class ML_Model_Panel_Data(ML_Model):
 def main(model_to_train_or_get=None, tuning:bool=False, split_ratio=0.2, random_state=42):
     """
     Main function to execute the ML model training and evaluation.
+
+    Args:
+        model_to_train_or_get: Model name or version to train or load.
+        tuning (bool): Whether to perform hyperparameter tuning.
+        split_ratio (float): Proportion of data to use for testing.
+        random_state (int): Random seed for reproducibility.
     """
     
     if model_to_train_or_get is None:
