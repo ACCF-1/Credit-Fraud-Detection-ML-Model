@@ -1108,7 +1108,7 @@ def main(model_to_train_or_get=None, tuning:bool=False, split_ratio=0.2, random_
 
 if __name__ == '__main__':
     main(model_to_train_or_get=8)
-    #main(model_to_train_or_get='bl', tuning=True, split_ratio=0.2, random_state=42)
+    #main(model_to_train_or_get='xgb', tuning=True, split_ratio=0.2, random_state=42)
 
 
 # %%
